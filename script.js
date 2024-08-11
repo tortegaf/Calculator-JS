@@ -1,7 +1,7 @@
 const display = document.getElementById("display");
 const buttons = Array.from(document.getElementsByClassName("btn"));
-let expressionParts = []; // Almacena los componentes de la expresión (números y operadores)
-let currentNumber = ""; // Almacena el número actual que se está ingresando
+let expression = "";
+let currentNumber = "";
 let lastInputWasOperator = false;
 let resultDisplayed = false;
 let activeOperator = null;
@@ -9,25 +9,21 @@ let activeOperator = null;
 function formatNumber(number) {
   let [integer, decimal] = number.split(".");
   integer = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-  if (decimal === undefined || decimal === "0" || decimal === "") {
-    return integer;
-  } else {
-    return `${integer}.${decimal}`;
-  }
+  return decimal ? `${integer},${decimal}` : integer;
 }
 
 function updateDisplay(value) {
   if (value.length > 10) {
-    value = parseFloat(value).toExponential(5); // Convierte a notación científica con 5 cifras decimales
+    value = parseFloat(value).toExponential(5);
   }
-  display.innerText = value;
+  display.innerText = formatNumber(value.replace(".", ","));
 }
 
 function evaluateExpression() {
   try {
-    const expression = expressionParts.join("");
-    const result = eval(expression);
-    return result.toString();
+    const sanitizedExpression = expression.replace(/,/g, ".");
+    const result = Function(`"use strict"; return (${sanitizedExpression})`)();
+    return result.toString().replace(".", ",");
   } catch {
     return "Error";
   }
@@ -35,44 +31,50 @@ function evaluateExpression() {
 
 function handleOperator(operator, buttonElement) {
   if (currentNumber !== "") {
-    expressionParts.push(currentNumber);
+    expression += currentNumber;
     currentNumber = "";
   }
 
-  if (lastInputWasOperator) {
-    expressionParts[expressionParts.length - 1] = operator; // Reemplaza el último operador
+  if (!lastInputWasOperator) {
+    expression += operator;
   } else {
-    expressionParts.push(operator);
-  }
-
-  let result = evaluateExpression();
-  if (result !== "Error") {
-    updateDisplay(result);
-    resultDisplayed = true;
+    expression = expression.slice(0, -1) + operator;
   }
 
   lastInputWasOperator = true;
-
   if (activeOperator) {
     activeOperator.classList.remove("active-operator");
   }
   buttonElement.classList.add("active-operator");
   activeOperator = buttonElement;
+
+  let result = evaluateExpression();
+  if (result !== "Error") {
+    updateDisplay(result);
+  }
 }
 
 function handleEqual() {
   if (currentNumber !== "") {
-    expressionParts.push(currentNumber);
+    expression += currentNumber;
     currentNumber = "";
   }
 
   let result = evaluateExpression();
   if (result !== "Error") {
     updateDisplay(result);
+    expression = result.replace(",", ".");
     resultDisplayed = true;
+  } else {
+    display.innerText = "Error";
+    expression = "";
   }
-  expressionParts = []; // Reseteamos la expresión después de calcular
+
   lastInputWasOperator = false;
+  if (activeOperator) {
+    activeOperator.classList.remove("active-operator");
+    activeOperator = null;
+  }
 }
 
 function handleBackspace() {
@@ -95,20 +97,23 @@ function handlePlusMinus() {
 
 function handlePercentage() {
   if (currentNumber) {
-    const currentValue = parseFloat(
-      currentNumber.replace(/\./g, "").replace(/,/g, ".")
-    );
-
-    if (expressionParts.length > 0 && !lastInputWasOperator) {
-      const previousValue = parseFloat(
-        expressionParts[expressionParts.length - 2]
-      );
-      currentNumber = (previousValue * (currentValue / 100)).toString();
-    } else {
-      currentNumber = (currentValue / 100).toString();
-    }
-
+    let currentValue = parseFloat(currentNumber.replace(",", "."));
+    currentValue /= 100;
+    currentNumber = currentValue.toString().replace(".", ",");
     updateDisplay(currentNumber);
+    // No actualizamos la expresión, solo el currentNumber
+  }
+}
+
+function resetCalculator() {
+  display.innerText = "0";
+  expression = "";
+  currentNumber = "";
+  lastInputWasOperator = false;
+  resultDisplayed = false;
+  if (activeOperator) {
+    activeOperator.classList.remove("active-operator");
+    activeOperator = null;
   }
 }
 
@@ -121,34 +126,27 @@ buttons.map((button) => {
     } else if (value === "=") {
       handleEqual();
     } else if (value === "AC") {
-      display.innerText = "0";
-      expressionParts = [];
-      currentNumber = "";
-      lastInputWasOperator = false;
-      resultDisplayed = false;
-      if (activeOperator) {
-        activeOperator.classList.remove("active-operator");
-        activeOperator = null;
-      }
+      resetCalculator();
     } else if (value === "←") {
-      // Si se presiona el botón de retroceso
       handleBackspace();
     } else if (value === "+/-") {
-      // Si se presiona el botón de cambio de signo
       handlePlusMinus();
     } else if (value === "%") {
-      // Si se presiona el botón de porcentaje
       handlePercentage();
+      lastInputWasOperator = false; // Permitir que el porcentaje sea seguido por un número o una operación
     } else {
       if (resultDisplayed) {
         display.innerText = value === "," ? "0," : value;
-        currentNumber = display.innerText;
+        currentNumber = display.innerText.replace(",", ".");
         resultDisplayed = false;
       } else {
-        currentNumber =
-          currentNumber === "0" && value !== ","
-            ? value
-            : currentNumber + value;
+        if (currentNumber === "0" && value !== ",") {
+          currentNumber = value;
+        } else if (!(value === "," && currentNumber.includes(","))) {
+          currentNumber += value.replace(",", ".");
+        } else if (value === ",") {
+          currentNumber += ".";
+        }
         updateDisplay(currentNumber);
       }
       lastInputWasOperator = false;

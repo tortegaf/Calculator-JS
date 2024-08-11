@@ -1,3 +1,5 @@
+/* styles.css */
+
 body {
   font-family: "Arial", sans-serif;
   display: flex;
@@ -71,8 +73,9 @@ body {
   filter: brightness(1.2);
 }
 
-#toggle-theme {
-  grid-column: span 1;
+.active-operator {
+  background-color: #2980b9; /* Color de resalto para el operador activo */
+  color: white;
 }
 
 body.dark {
@@ -93,19 +96,3 @@ body.dark #toggle-theme {
 body.dark .btn-accent {
   background-color: #c0392b;
 }
-
-.active-operator {
-  background-color: #2980b9; /* Color de resalto para el operador activo */
-  color: white;
-}
-
-
-.btn {
-  /* Aquí va el estilo regular de los botones */
-}
-
-.active-operator {
-  background-color: #f39c12; /* Color para el operador activo */
-  color: #ffffff; /* Color del texto del operador activo */
-}
-
