@@ -101,7 +101,6 @@ function handlePercentage() {
     currentValue /= 100;
     currentNumber = currentValue.toString().replace(".", ",");
     updateDisplay(currentNumber);
-    // No actualizamos la expresión, solo el currentNumber
   }
 }
 
@@ -133,7 +132,7 @@ buttons.map((button) => {
       handlePlusMinus();
     } else if (value === "%") {
       handlePercentage();
-      lastInputWasOperator = false; // Permitir que el porcentaje sea seguido por un número o una operación
+      lastInputWasOperator = false;
     } else {
       if (resultDisplayed) {
         display.innerText = value === "," ? "0," : value;
