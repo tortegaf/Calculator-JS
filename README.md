@@ -1,6 +1,7 @@
 # CalculatorJS
 
-![imagen](https://github.com/user-attachments/assets/82b373d5-62da-4aa6-88fe-4bca7835440e)
+![imagen](https://github.com/user-attachments/assets/857e8b47-39e5-450b-b035-7169cdb02cbf)
+
 
 ## The Calculator Runs here: https://tortegaf.github.io/Calculator-JS/
 
